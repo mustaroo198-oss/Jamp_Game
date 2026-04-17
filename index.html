@@ -3,43 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jump Game Pro - Music Edition</title>
+    <title>Jump Game Pro - Final Edition</title>
     <style>
         :root { --primary: #2563eb; --bg-dark: #020617; --card-bg: #ffffff; }
         body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); display: flex; justify-content: center; align-items: center; height: 100vh; touch-action: none; }
         
-        #login-container { position: absolute; z-index: 100; background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        #login-container { position: absolute; z-index: 100; background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         #loading-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 200; flex-direction: column; justify-content: center; align-items: center; color: white; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        #game-container { display: none; width: 100%; height: 100%; position: relative; }
+        #game-container { display: none; width: 100%; height: 100%; position: relative; overflow: hidden; }
         canvas { display: block; margin: 0 auto; transition: background 0.8s ease-in-out; } 
         
         #game-ui { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; color: #fff; pointer-events: none; z-index: 10; }
         .top-bar { width: 95%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; }
-        
-        .center-stats { 
-            position: absolute; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 10px; align-items: center;
-        }
-
+        .center-stats { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; }
         .level-badge { background: #ef4444; padding: 5px 12px; border-radius: 12px; font-size: 14px; font-weight: bold; }
         .timer-badge { background: rgba(255, 255, 255, 0.2); padding: 5px 12px; border-radius: 12px; font-size: 14px; font-family: monospace; border: 1px solid rgba(255,255,255,0.3); }
-        
-        .score-container { text-align: center; margin-top: 20px; }
-        #passed-counter { 
-            font-size: 50px; 
-            font-weight: 900; 
-            background: rgba(0,0,0,0.3); 
-            padding: 5px 30px; 
-            border-radius: 50px; 
-            color: #ffffff;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
+        #passed-counter { font-size: 50px; font-weight: 900; background: rgba(0,0,0,0.3); padding: 5px 30px; border-radius: 50px; color: #ffffff; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-top: 10px; }
 
         input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 0.6rem; text-align: right; box-sizing: border-box; }
         button { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 0.6rem; font-weight: 600; cursor: pointer; }
+
+        /* أزرار التحكم للهاتف */
+        #mobile-controls { position: absolute; bottom: 30px; width: 100%; display: none; justify-content: space-between; padding: 0 25px; box-sizing: border-box; z-index: 50; }
+        .control-btn { width: 75px; height: 75px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; color: white; font-size: 28px; display: flex; justify-content: center; align-items: center; pointer-events: auto; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .control-btn:active { background: rgba(255, 255, 255, 0.4); transform: scale(0.9); }
+
+        @media (max-width: 768px) { #mobile-controls { display: flex; } }
     </style>
 </head>
 <body>
@@ -49,11 +41,11 @@
 </audio>
 
 <div id="login-container">
-    <h2 style="text-align:center">_____________Join Game______________</h2>
-    <input type="text" id="loginUser" placeholder="اسم المستخدم ">
+    <h2 style="color: var(--primary)">_____________Join Game______________</h2>
+    <input type="text" id="loginUser" placeholder="اسم المستخدم">
     <input type="password" id="loginPass" placeholder="كلمة المرور ">
     <button onclick="checkLogin()">ابدأ الحماس 🎶</button>
-    <h2 style="text-align:center"> لو كملت ليفل 10 ليك مكافئه من صانع اللعبه</h2>
+    <p style="margin-top: 15px; font-weight: bold; color: #ef4444;">لو كملت ليفل 10 ليك مكافأة من صانع اللعبة 🎁</p>
 </div>
 
 <div id="loading-screen">
@@ -71,11 +63,15 @@
             </div>
             <div id="lives">❤️❤️❤️</div>
         </div>
-        <div class="score-container">
-            <div id="passed-counter">0</div>
-        </div>
+        <div id="passed-counter">0</div>
     </div>
+    
     <canvas id="gameCanvas"></canvas>
+
+    <div id="mobile-controls">
+        <div id="btn-left" class="control-btn">◀</div>
+        <div id="btn-right" class="control-btn">▶</div>
+    </div>
 </div>
 
 <script>
@@ -87,32 +83,22 @@
     let gravity = 0.6;
     let timeLeft = 180; 
     let timerInterval;
-    
-    // متغير الموسيقى
     const bgMusic = document.getElementById('bgMusic');
 
     const backgrounds = [
-        'linear-gradient(to bottom, #0f172a, #020617)',
-        'linear-gradient(to bottom, #1e1b4b, #312e81)',
-        'linear-gradient(to bottom, #134e4a, #0d9488)',
-        'linear-gradient(to bottom, #064e3b, #059669)',
-        'linear-gradient(to bottom, #422006, #92400e)',
-        'linear-gradient(to bottom, #450a0a, #991b1b)',
-        'linear-gradient(to bottom, #581c87, #7e22ce)',
-        'linear-gradient(to bottom, #1e3a8a, #3b82f6)',
-        'linear-gradient(to bottom, #312e81, #4338ca)',
-        'linear-gradient(to bottom, #171717, #404040)'
+        'linear-gradient(to bottom, #0f172a, #020617)', 'linear-gradient(to bottom, #1e1b4b, #312e81)',
+        'linear-gradient(to bottom, #134e4a, #0d9488)', 'linear-gradient(to bottom, #064e3b, #059669)',
+        'linear-gradient(to bottom, #422006, #92400e)', 'linear-gradient(to bottom, #450a0a, #991b1b)',
+        'linear-gradient(to bottom, #581c87, #7e22ce)', 'linear-gradient(to bottom, #1e3a8a, #3b82f6)',
+        'linear-gradient(to bottom, #312e81, #4338ca)', 'linear-gradient(to bottom, #171717, #404040)'
     ];
 
     function checkLogin() {
         if (document.getElementById('loginUser').value === "admin" && document.getElementById('loginPass').value === "123456") {
-            // تشغيل الموسيقى فور الضغط
-            bgMusic.play().catch(e => console.log("Audio play deferred"));
+            bgMusic.play().catch(() => {});
             bgMusic.volume = 0.4;
-            
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('loading-screen').style.display = 'flex';
-            
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('game-container').style.display = 'block';
@@ -136,16 +122,20 @@
         window.addEventListener('resize', resize);
         resize();
         resetPlayerStats();
-        updateMusicSpeed(); // ضبط سرعة الموسيقى بناءً على الليفل الحالي
+        updateMusicSpeed();
 
+        // تحكم الكيبورد
         window.addEventListener('keydown', e => keys[e.code] = true);
         window.addEventListener('keyup', e => keys[e.code] = false);
         
-        canvas.addEventListener('touchstart', e => {
-            touchX = e.touches[0].clientX;
-            e.preventDefault();
-        }, {passive: false});
-        canvas.addEventListener('touchend', () => touchX = null);
+        // تحكم أزرار الشاشة (الجوال)
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+
+        btnLeft.addEventListener('touchstart', (e) => { touchX = 10; e.preventDefault(); }, {passive: false});
+        btnLeft.addEventListener('touchend', () => { touchX = null; });
+        btnRight.addEventListener('touchstart', (e) => { touchX = canvas.width - 10; e.preventDefault(); }, {passive: false});
+        btnRight.addEventListener('touchend', () => { touchX = null; });
 
         initLevel();
         startMasterTimer();
@@ -159,7 +149,6 @@
     }
 
     function updateMusicSpeed() {
-        // تزداد سرعة الأغنية بنسبة 7% مع كل لفل (بحد أقصى ضعف السرعة)
         let newRate = 1 + (currentLevel - 1) * 0.07;
         bgMusic.playbackRate = Math.min(newRate, 2.0);
     }
@@ -173,10 +162,11 @@
             updateTimerDisplay();
             if (timeLeft <= 0) {
                 currentLevel++;
+                if(currentLevel === 10) alert("🎁 مكافأتك هي الكود: M10RA");
                 localStorage.setItem('jumpGameLevel', currentLevel);
                 levelDisplay.innerText = currentLevel;
                 player.speed += 0.5;
-                updateMusicSpeed(); // تسريع الأغنية هنا
+                updateMusicSpeed();
                 timeLeft = 180; 
             }
         }, 1000);
@@ -213,6 +203,7 @@
     }
 
     function update() {
+        // منطق الحركة (كيبورد + أزرار شاشة)
         if (keys['ArrowRight'] || keys['KeyD'] || (touchX !== null && touchX > canvas.width / 2)) player.vx = player.speed;
         else if (keys['ArrowLeft'] || keys['KeyA'] || (touchX !== null && touchX < canvas.width / 2)) player.vx = -player.speed;
         else player.vx = 0;
@@ -229,12 +220,10 @@
                 player.vy = player.jump;
                 plat.touched = true;
             }
-
             if (!plat.passed && player.y + player.h < plat.y) {
                 plat.passed = true;
                 platformsPassed++;
                 passedElement.innerText = platformsPassed;
-                
                 if (platformsPassed > highScore) {
                     highScore = platformsPassed;
                     highScoreElement.innerText = highScore;
@@ -262,22 +251,18 @@
         if (safePlat) {
             player.x = safePlat.x + (safePlat.w / 2) - (player.w / 2);
             player.y = safePlat.y - player.h - 20;
-        } else {
-            player.y = 100; player.x = canvas.width / 2;
-        }
+        } else { player.y = 100; player.x = canvas.width / 2; }
         player.vy = 0; player.vx = 0;
     }
 
     function gameOver() {
-        alert("انتهت المحاولات! الريتم سيعود للبداية.");
+        alert("انتهت المحاولات!");
         platformsPassed = 0;
         passedElement.innerText = "0";
         lives = 3; 
+        currentLevel = 1;
         updateLivesUI();
-        currentLevel = 1; // إعادة المستوى للبداية عند الخسارة التامة
-        localStorage.setItem('jumpGameLevel', currentLevel);
-        levelDisplay.innerText = currentLevel;
-        updateMusicSpeed(); 
+        updateMusicSpeed();
         startMasterTimer(); 
         resetPlayerStats();
         initLevel();
@@ -292,13 +277,11 @@
     function draw() {
         let bgIndex = Math.floor(platformsPassed / 20) % backgrounds.length;
         canvas.style.background = backgrounds[bgIndex];
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         platforms.forEach(plat => {
             ctx.fillStyle = plat.color;
             ctx.beginPath(); ctx.roundRect(plat.x, plat.y, plat.w, plat.h, 6); ctx.fill();
         });
-        
         ctx.fillStyle = "#fbbf24";
         ctx.beginPath(); ctx.roundRect(player.x, player.y, player.w, player.h, 8); ctx.fill();
         ctx.fillStyle = "black";

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jump Game </title>
+    <title>Jump Game Pro - Music Edition</title>
     <style>
         :root { --primary: #2563eb; --bg-dark: #020617; --card-bg: #ffffff; }
         body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); display: flex; justify-content: center; align-items: center; height: 100vh; touch-action: none; }
@@ -44,16 +44,21 @@
 </head>
 <body>
 
+<audio id="bgMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
 <div id="login-container">
-    <h2 style="text-align:center">Join Game </h2>
-    <input type="text" id="loginUser" placeholder="اسم المستخدم">
-    <input type="password" id="loginPass" placeholder="كلمة المرور">
-    <button onclick="checkLogin()">دخول</button>
+    <h2 style="text-align:center">_____________Join Game______________</h2>
+    <input type="text" id="loginUser" placeholder="اسم المستخدم ">
+    <input type="password" id="loginPass" placeholder="كلمة المرور ">
+    <button onclick="checkLogin()">ابدأ الحماس 🎶</button>
+    <h2 style="text-align:center"> لو كملت ليفل 10 ليك مكافئه من صانع اللعبه</h2>
 </div>
 
 <div id="loading-screen">
     <div class="loader"></div>
-    <div>جاري تحميل العالم...</div>
+    <div>جاري ضبط الإيقاع وتحميل العالم...</div>
 </div>
 
 <div id="game-container">
@@ -82,25 +87,32 @@
     let gravity = 0.6;
     let timeLeft = 180; 
     let timerInterval;
+    
+    // متغير الموسيقى
+    const bgMusic = document.getElementById('bgMusic');
 
-    // مصفوفة ألوان موسعة (تتغير كل 20 مسطبة)
     const backgrounds = [
-        'linear-gradient(to bottom, #0f172a, #020617)', // أزرق ليلي
-        'linear-gradient(to bottom, #1e1b4b, #312e81)', // أرجواني عميق
-        'linear-gradient(to bottom, #134e4a, #0d9488)', // فيروزي
-        'linear-gradient(to bottom, #064e3b, #059669)', // أخضر غابة
-        'linear-gradient(to bottom, #422006, #92400e)', // بني خريفي
-        'linear-gradient(to bottom, #450a0a, #991b1b)', // أحمر ناري
-        'linear-gradient(to bottom, #581c87, #7e22ce)', // بنفسجي صاخب
-        'linear-gradient(to bottom, #1e3a8a, #3b82f6)', // أزرق ملكي
-        'linear-gradient(to bottom, #312e81, #4338ca)', // نيلي
-        'linear-gradient(to bottom, #171717, #404040)'  // رمادي معدني
+        'linear-gradient(to bottom, #0f172a, #020617)',
+        'linear-gradient(to bottom, #1e1b4b, #312e81)',
+        'linear-gradient(to bottom, #134e4a, #0d9488)',
+        'linear-gradient(to bottom, #064e3b, #059669)',
+        'linear-gradient(to bottom, #422006, #92400e)',
+        'linear-gradient(to bottom, #450a0a, #991b1b)',
+        'linear-gradient(to bottom, #581c87, #7e22ce)',
+        'linear-gradient(to bottom, #1e3a8a, #3b82f6)',
+        'linear-gradient(to bottom, #312e81, #4338ca)',
+        'linear-gradient(to bottom, #171717, #404040)'
     ];
 
     function checkLogin() {
         if (document.getElementById('loginUser').value === "admin" && document.getElementById('loginPass').value === "123456") {
+            // تشغيل الموسيقى فور الضغط
+            bgMusic.play().catch(e => console.log("Audio play deferred"));
+            bgMusic.volume = 0.4;
+            
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('loading-screen').style.display = 'flex';
+            
             setTimeout(() => {
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('game-container').style.display = 'block';
@@ -124,9 +136,11 @@
         window.addEventListener('resize', resize);
         resize();
         resetPlayerStats();
+        updateMusicSpeed(); // ضبط سرعة الموسيقى بناءً على الليفل الحالي
 
         window.addEventListener('keydown', e => keys[e.code] = true);
         window.addEventListener('keyup', e => keys[e.code] = false);
+        
         canvas.addEventListener('touchstart', e => {
             touchX = e.touches[0].clientX;
             e.preventDefault();
@@ -144,6 +158,12 @@
         platformsPassed = 0;
     }
 
+    function updateMusicSpeed() {
+        // تزداد سرعة الأغنية بنسبة 7% مع كل لفل (بحد أقصى ضعف السرعة)
+        let newRate = 1 + (currentLevel - 1) * 0.07;
+        bgMusic.playbackRate = Math.min(newRate, 2.0);
+    }
+
     function startMasterTimer() {
         if (timerInterval) clearInterval(timerInterval);
         timeLeft = 180;
@@ -156,6 +176,7 @@
                 localStorage.setItem('jumpGameLevel', currentLevel);
                 levelDisplay.innerText = currentLevel;
                 player.speed += 0.5;
+                updateMusicSpeed(); // تسريع الأغنية هنا
                 timeLeft = 180; 
             }
         }, 1000);
@@ -212,7 +233,7 @@
             if (!plat.passed && player.y + player.h < plat.y) {
                 plat.passed = true;
                 platformsPassed++;
-                passedElement.innerText = platformsPassed; // الرقم فقط
+                passedElement.innerText = platformsPassed;
                 
                 if (platformsPassed > highScore) {
                     highScore = platformsPassed;
@@ -248,11 +269,15 @@
     }
 
     function gameOver() {
-        alert("انتهت المحاولات!");
+        alert("انتهت المحاولات! الريتم سيعود للبداية.");
         platformsPassed = 0;
         passedElement.innerText = "0";
         lives = 3; 
         updateLivesUI();
+        currentLevel = 1; // إعادة المستوى للبداية عند الخسارة التامة
+        localStorage.setItem('jumpGameLevel', currentLevel);
+        levelDisplay.innerText = currentLevel;
+        updateMusicSpeed(); 
         startMasterTimer(); 
         resetPlayerStats();
         initLevel();
@@ -265,7 +290,6 @@
     }
 
     function draw() {
-        // التغيير كل 20 مسطبة مقطوعة
         let bgIndex = Math.floor(platformsPassed / 20) % backgrounds.length;
         canvas.style.background = backgrounds[bgIndex];
 

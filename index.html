@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jump Game - Persistent Level Edition</title>
+    <title>Jump Game </title>
     <style>
         :root { --primary: #2563eb; --bg-dark: #020617; --card-bg: #ffffff; }
         body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); display: flex; justify-content: center; align-items: center; height: 100vh; touch-action: none; }
         
-        #login-container { position: absolute; z-index: 100; background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 400px; }
+        #login-container { position: absolute; z-index: 100; background: var(--card-bg); padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         #loading-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 200; flex-direction: column; justify-content: center; align-items: center; color: white; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #game-container { display: none; width: 100%; height: 100%; position: relative; }
-        canvas { background: linear-gradient(to bottom, #0f172a, #020617); display: block; margin: 0 auto; }
+        canvas { display: block; margin: 0 auto; transition: background 0.8s ease-in-out; } 
         
         #game-ui { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; color: #fff; pointer-events: none; z-index: 10; }
         .top-bar { width: 95%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; }
@@ -27,7 +27,17 @@
         .level-badge { background: #ef4444; padding: 5px 12px; border-radius: 12px; font-size: 14px; font-weight: bold; }
         .timer-badge { background: rgba(255, 255, 255, 0.2); padding: 5px 12px; border-radius: 12px; font-size: 14px; font-family: monospace; border: 1px solid rgba(255,255,255,0.3); }
         
-        #score { font-size: 40px; font-weight: bold; margin-top: 10px; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .score-container { text-align: center; margin-top: 20px; }
+        #passed-counter { 
+            font-size: 50px; 
+            font-weight: 900; 
+            background: rgba(0,0,0,0.3); 
+            padding: 5px 30px; 
+            border-radius: 50px; 
+            color: #ffffff;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
         input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 0.6rem; text-align: right; box-sizing: border-box; }
         button { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 0.6rem; font-weight: 600; cursor: pointer; }
     </style>
@@ -35,15 +45,15 @@
 <body>
 
 <div id="login-container">
-    <h2 style="text-align:center">تسجيل الدخول</h2>
-    <input type="email" id="loginEmail" placeholder="الإيميل">
+    <h2 style="text-align:center">Join Game </h2>
+    <input type="text" id="loginUser" placeholder="اسم المستخدم">
     <input type="password" id="loginPass" placeholder="كلمة المرور">
     <button onclick="checkLogin()">دخول</button>
 </div>
 
 <div id="loading-screen">
     <div class="loader"></div>
-    <div>جاري مزامنة ليفل اللاعب...</div>
+    <div>جاري تحميل العالم...</div>
 </div>
 
 <div id="game-container">
@@ -56,23 +66,39 @@
             </div>
             <div id="lives">❤️❤️❤️</div>
         </div>
-        <div id="score">0</div>
+        <div class="score-container">
+            <div id="passed-counter">0</div>
+        </div>
     </div>
     <canvas id="gameCanvas"></canvas>
 </div>
 
 <script>
     let isGameRunning = false;
-    let canvas, ctx, scoreElement, highScoreElement, livesElement, levelDisplay, timeDisplay;
-    let score = 0, highScore = localStorage.getItem('jumpGameHighScore') || 0, lives = 3;
+    let canvas, ctx, highScoreElement, livesElement, levelDisplay, timeDisplay, passedElement;
+    let score = 0, highScore = localStorage.getItem('jumpGameHighScore') || 0, lives = 3, platformsPassed = 0;
     let currentLevel = parseInt(localStorage.getItem('jumpGameLevel')) || 1;
     let player, platforms = [], keys = {}, touchX = null;
     let gravity = 0.6;
     let timeLeft = 180; 
     let timerInterval;
 
+    // مصفوفة ألوان موسعة (تتغير كل 20 مسطبة)
+    const backgrounds = [
+        'linear-gradient(to bottom, #0f172a, #020617)', // أزرق ليلي
+        'linear-gradient(to bottom, #1e1b4b, #312e81)', // أرجواني عميق
+        'linear-gradient(to bottom, #134e4a, #0d9488)', // فيروزي
+        'linear-gradient(to bottom, #064e3b, #059669)', // أخضر غابة
+        'linear-gradient(to bottom, #422006, #92400e)', // بني خريفي
+        'linear-gradient(to bottom, #450a0a, #991b1b)', // أحمر ناري
+        'linear-gradient(to bottom, #581c87, #7e22ce)', // بنفسجي صاخب
+        'linear-gradient(to bottom, #1e3a8a, #3b82f6)', // أزرق ملكي
+        'linear-gradient(to bottom, #312e81, #4338ca)', // نيلي
+        'linear-gradient(to bottom, #171717, #404040)'  // رمادي معدني
+    ];
+
     function checkLogin() {
-        if (document.getElementById('loginEmail').value === "admin@game.com" && document.getElementById('loginPass').value === "123456") {
+        if (document.getElementById('loginUser').value === "admin" && document.getElementById('loginPass').value === "123456") {
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('loading-screen').style.display = 'flex';
             setTimeout(() => {
@@ -80,29 +106,31 @@
                 document.getElementById('game-container').style.display = 'block';
                 if (!isGameRunning) { setupGame(); isGameRunning = true; }
             }, 1500);
-        }
+        } else { alert("بيانات غير صحيحة!"); }
     }
 
     function setupGame() {
         canvas = document.getElementById('gameCanvas');
         ctx = canvas.getContext('2d');
-        scoreElement = document.getElementById('score');
         highScoreElement = document.getElementById('highScore');
         livesElement = document.getElementById('lives');
         levelDisplay = document.getElementById('levelDisplay');
         timeDisplay = document.getElementById('timeDisplay');
+        passedElement = document.getElementById('passed-counter');
         
         highScoreElement.innerText = highScore;
         levelDisplay.innerText = currentLevel;
 
         window.addEventListener('resize', resize);
         resize();
-
         resetPlayerStats();
 
         window.addEventListener('keydown', e => keys[e.code] = true);
         window.addEventListener('keyup', e => keys[e.code] = false);
-        canvas.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+        canvas.addEventListener('touchstart', e => {
+            touchX = e.touches[0].clientX;
+            e.preventDefault();
+        }, {passive: false});
         canvas.addEventListener('touchend', () => touchX = null);
 
         initLevel();
@@ -113,17 +141,16 @@
     function resetPlayerStats() {
         let playerSpeed = 10 + (currentLevel * 0.5);
         player = { x: canvas.width / 2 - 17, y: canvas.height - 120, w: 35, h: 45, vx: 0, vy: 0, jump: -16, speed: playerSpeed };
+        platformsPassed = 0;
     }
 
     function startMasterTimer() {
         if (timerInterval) clearInterval(timerInterval);
-        timeLeft = 180; // يبدأ دائماً من 3 دقائق
+        timeLeft = 180;
         updateTimerDisplay();
-        
         timerInterval = setInterval(() => {
             timeLeft--;
             updateTimerDisplay();
-
             if (timeLeft <= 0) {
                 currentLevel++;
                 localStorage.setItem('jumpGameLevel', currentLevel);
@@ -147,13 +174,13 @@
 
     function initLevel() {
         platforms = [];
-        platforms.push({x: 0, y: canvas.height - 60, w: canvas.width, h: 25, scored: true, color: '#334155'});
-        for (let i = 1; i < 500; i++) {
+        platforms.push({x: 0, y: canvas.height - 60, w: canvas.width, h: 25, touched: true, passed: true, color: '#334155'});
+        for (let i = 1; i < 2000; i++) {
             let width = 85 + Math.random() * 45;
             platforms.push({
                 x: Math.random() * (canvas.width - width),
                 y: canvas.height - (i * 105),
-                w: width, h: 15, scored: false, color: '#10b981'
+                w: width, h: 15, touched: false, passed: false, color: '#10b981'
             });
         }
     }
@@ -179,15 +206,18 @@
         platforms.forEach(plat => {
             if (player.vy > 0 && player.x + player.w > plat.x && player.x < plat.x + plat.w && player.y + player.h > plat.y && player.y + player.h < plat.y + plat.h + 15) {
                 player.vy = player.jump;
-                if (!plat.scored) {
-                    plat.scored = true;
-                    score++;
-                    scoreElement.innerText = score;
-                    if (score > highScore) {
-                        highScore = score;
-                        highScoreElement.innerText = highScore;
-                        localStorage.setItem('jumpGameHighScore', highScore);
-                    }
+                plat.touched = true;
+            }
+
+            if (!plat.passed && player.y + player.h < plat.y) {
+                plat.passed = true;
+                platformsPassed++;
+                passedElement.innerText = platformsPassed; // الرقم فقط
+                
+                if (platformsPassed > highScore) {
+                    highScore = platformsPassed;
+                    highScoreElement.innerText = highScore;
+                    localStorage.setItem('jumpGameHighScore', highScore);
                 }
             }
         });
@@ -218,16 +248,12 @@
     }
 
     function gameOver() {
-        alert("انتهت القلوب! سيتم تصفير عداد الوقت مع الحفاظ على الليفل.");
-        score = 0; 
-        scoreElement.innerText = "0";
+        alert("انتهت المحاولات!");
+        platformsPassed = 0;
+        passedElement.innerText = "0";
         lives = 3; 
         updateLivesUI();
-        
-        // تصفير عداد الوقت ليدأ من 3 دقائق مجدداً
         startMasterTimer(); 
-        
-        // الحفاظ على موقع اللاعب والمساطب
         resetPlayerStats();
         initLevel();
     }
@@ -239,11 +265,16 @@
     }
 
     function draw() {
+        // التغيير كل 20 مسطبة مقطوعة
+        let bgIndex = Math.floor(platformsPassed / 20) % backgrounds.length;
+        canvas.style.background = backgrounds[bgIndex];
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         platforms.forEach(plat => {
             ctx.fillStyle = plat.color;
             ctx.beginPath(); ctx.roundRect(plat.x, plat.y, plat.w, plat.h, 6); ctx.fill();
         });
+        
         ctx.fillStyle = "#fbbf24";
         ctx.beginPath(); ctx.roundRect(player.x, player.y, player.w, player.h, 8); ctx.fill();
         ctx.fillStyle = "black";
